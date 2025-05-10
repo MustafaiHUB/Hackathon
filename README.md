@@ -64,7 +64,7 @@ npm run build
 ---
 
 # Pyhton Setup
-
+### please use the following api-key for general testing purposes:""
 Please move the pyhton code to a seperate folder OR to your python environment. This project includes Python code for AI functionalities.
 
 ### 1. Create and activate a virtual environment
