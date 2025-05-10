@@ -22,7 +22,7 @@ app = Flask(__name__)
 CORS(app)
 
 # API Key are here just for testing purposes, please use environment variables in production
-client = OpenAI(api_key="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")
+client = OpenAI(api_key="")
 ASSISTANT_ID = "asst_672kAZvipQVYC8EkIRnJR420"
 
 responses = {}
@@ -143,7 +143,67 @@ def deliver_pdf(pdf_buffer):
 def daily_job():
     try:
         logger.info("Starting daily job")
-        msgs = listMessages
+        thread = client.beta.threads.create(messages=[{"role": "user", "content": "Give me a summary for the past day about the failed transactions with details."}])
+
+        client.beta.assistants.retrieve(ASSISTANT_ID)
+        run = client.beta.threads.runs.create(thread_id=thread.id, assistant_id=ASSISTANT_ID)
+
+        # while run != "completed":
+        #     run = client.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
+        #     time.sleep(1)
+
+        messages = client.beta.threads.messages.list(thread_id=thread.id)
+        new_message = messages.data[0].content[0].text.value
+
+        toolused = 0
+        while True:
+            print(f"Run Status: {run.status}")
+            
+            if run.status == "requires_action":
+                toolused = 1
+                required_tool_calls = run.required_action.submit_tool_outputs.tool_calls
+
+                tool_outputs = []
+                for tool_call in required_tool_calls:
+                    tool_id = tool_call.id
+                    tool_name = tool_call.function.name
+                    tool_args = tool_call.function.arguments
+
+                    print(f"Handling tool call: {tool_name} with args: {tool_args}")
+
+                    # For now, respond with a placeholder (or process tool_args as needed)
+                    query_string = json.loads(tool_args).get("query")
+                    query_result = run_sql_query(query_string)
+
+                    tool_outputs.append({
+                        "tool_call_id": tool_id,
+                        "output": str(query_result)  # Convert the result to string or JSON
+                    })
+
+
+                run = client.beta.threads.runs.submit_tool_outputs(
+                    thread_id=thread.id,
+                    run_id=run.id,
+                    tool_outputs=tool_outputs
+                )
+
+            elif run.status == "completed":
+                break
+
+            else:
+                time.sleep(1)
+                run = client.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
+
+
+        # Retrieve the generated message
+        messages = client.beta.threads.messages.list(thread_id=thread.id)
+        new_message = messages.data[0].content[0].text.value
+
+        # new_message = clean_text(new_message)
+        if(toolused == 1):
+            new_message = run_sql_query(new_message)
+            
+        msgs = new_message
         if not msgs:
             logger.info("No messages fetched – skipping PDF generation.")
             return
@@ -161,6 +221,7 @@ def daily_job():
 
     except Exception:
         logger.exception("Error in daily job")
+        
 def get_mall_transactions():
     return
 
@@ -449,7 +510,7 @@ if __name__ == '__main__':
     app.run(debug=True, port=5000)
     logger.info("Scheduler started, will run daily at %s", DAILY_TIME)
     daily_job()
-    schedule.every().day.at(DAILY_TIME).do(daily_job)
+    schedule.every(30).seconds.at(DAILY_TIME).do(daily_job)
     while True:
         schedule.run_pending()
         time.sleep(30)
