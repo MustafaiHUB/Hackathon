@@ -1,4 +1,4 @@
-# 📦 Project Name
+# 📦 FinAdvisor
 
 > A modern front-end web application built using **React.js** and **Vite** for optimal performance and rapid development.
 
