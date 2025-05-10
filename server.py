@@ -22,7 +22,7 @@ app = Flask(__name__)
 CORS(app)
 
 # API Key are here just for testing purposes, please use environment variables in production
-client = OpenAI(api_key="")
+client = OpenAI(api_key="your-api-key")
 ASSISTANT_ID = "asst_672kAZvipQVYC8EkIRnJR420"
 
 responses = {}
@@ -30,7 +30,7 @@ threads = {}
 messageToPDF = ""
 
 # Configuration – consider loading these from environment variables for security
-DELIVER_API_URL = os.getenv("DELIVER_API_URL", "http://localhost:8080/send-pdf-email")
+DELIVER_API_URL = os.getenv("DELIVER_API_URL", "http://localhost:8080/send-pdf")
 DAILY_TIME      = os.getenv("DAILY_TIME", "02:00")  # 24‑hour HH:MM when the job runs
 OUTPUT_DIR      = os.getenv("OUTPUT_DIR", "./pdf_output")
 DB_CONFIG = {
@@ -134,7 +134,8 @@ def save_pdf_locally(buffer, prefix="messages"):
 
 
 def deliver_pdf(pdf_buffer):
-    files = {"file": ("messages.pdf", pdf_buffer, "application/pdf")}
+    pdf_buffer.seek(0)  # Make sure pointer is at the start
+    files = {'file': ('report.pdf', pdf_buffer, 'application/pdf')}
     resp = requests.post('http://localhost:8080/send-pdf', files=files)
     resp.raise_for_status()
     return resp.json()
@@ -510,7 +511,7 @@ if __name__ == '__main__':
     app.run(debug=True, port=5000)
     logger.info("Scheduler started, will run daily at %s", DAILY_TIME)
     daily_job()
-    schedule.every(30).seconds.at(DAILY_TIME).do(daily_job)
+    schedule.every().day.at(DAILY_TIME).do(daily_job)
     while True:
         schedule.run_pending()
         time.sleep(30)
