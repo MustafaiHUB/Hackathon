@@ -60,3 +60,26 @@ npm run dev
 yarn dev
 
 npm run build
+
+---
+
+# Pyhton Setup
+
+This project includes Python code for AI functionalities.
+
+### 1. Create and activate a virtual environment
+
+**For macOS/Linux:**
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+For Windows:
+python -m venv venv
+.venv\Scripts\activate
+
+### 2. Start the python code
+
+python server.py
