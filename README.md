@@ -65,7 +65,7 @@ npm run build
 
 # Pyhton Setup
 
-This project includes Python code for AI functionalities.
+Please move the pyhton code to a seperate folder OR to your python environment. This project includes Python code for AI functionalities.
 
 ### 1. Create and activate a virtual environment
 
